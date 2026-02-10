@@ -1,0 +1,16 @@
+user:
+  name: Your Name
+  email: you@example.com
+  timezone: UTC
+
+preferences:
+  skills:
+    - typescript
+    - react
+    - node
+  salaryMinimum: 80000
+  location: Remote
+
+hardNos:
+  - crypto
+  - blockchain

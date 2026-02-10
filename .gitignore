@@ -1,0 +1,24 @@
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+
+# Claude Code
+.claude/
+
+# BMAD framework and outputs
+_bmad/
+_bmad-output/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local data (gitignored, not persisted across CI runs)
+data/
+
+# Environment secrets
+.env
