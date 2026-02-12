@@ -33,4 +33,5 @@ export interface RunStatus {
   emailSent: boolean;
   durationMs: number;
   errors: string[];
+  topMatches: MatchResult[];
 }

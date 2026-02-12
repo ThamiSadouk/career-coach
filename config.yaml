@@ -1,16 +1,14 @@
 user:
-  name: Your Name
-  email: you@example.com
+  name: Thami Sadouk
+  email: thami.sadouk@gmail.com
   timezone: UTC
 
 preferences:
   skills:
-    - typescript
-    - react
-    - node
+    - golang
+    - software engineer
   salaryMinimum: 80000
   location: Remote
 
-hardNos:
-  - crypto
-  - blockchain
+#hardNos:
+#  - family

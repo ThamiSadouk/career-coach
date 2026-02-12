@@ -1,0 +1,23 @@
+name: Daily Job Match Email
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 6am UTC daily
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  send-matches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - run: npm ci
+
+      - run: npm start
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          WEB3_CAREER_API_KEY: ${{ secrets.WEB3_CAREER_API_KEY }}

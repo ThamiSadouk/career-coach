@@ -2,7 +2,10 @@ import 'dotenv/config';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { log } from './logger.js';
 import { loadConfig } from './config.js';
-import type { Job, MatchResult, RunStatus } from './types.js';
+import { fetchAllJobs } from './fetcher.js';
+import { matchJobs } from './matcher.js';
+import { sendMatchEmail } from './emailer.js';
+import type { RunStatus } from './types.js';
 
 async function main(): Promise<void> {
   const startTime = Date.now();
@@ -22,25 +25,14 @@ async function main(): Promise<void> {
   log.info(`Starting Career Coach pipeline${isDryRun ? ' (dry-run mode)' : ''}`);
   log.info(`User: ${config.user.name}, Skills: ${config.preferences.skills.join(', ')}`);
 
-  // 2. Fetch jobs (placeholder)
-  log.info('Fetching jobs...');
-  const jobs: Job[] = [];
-  log.info(`Fetched ${jobs.length} jobs`);
+  // 2. Fetch jobs from all sources
+  const jobs = await fetchAllJobs();
 
-  // 3. Match and score (placeholder)
-  log.info('Matching jobs...');
-  const matches: MatchResult[] = [];
-  log.info(`Found ${matches.length} matches`);
+  // 3. Match and score
+  const matches = matchJobs(jobs, config);
 
   // 4. Send email (skip in dry-run)
-  let emailSent = false;
-  if (isDryRun) {
-    log.info('Dry-run mode — skipping email');
-  } else {
-    log.info('Sending email...');
-    // placeholder — will be implemented in Epic 4
-    log.info('Email placeholder complete');
-  }
+  const emailSent = await sendMatchEmail(matches, config, isDryRun);
 
   // 5. Write run status
   const status: RunStatus = {
@@ -51,6 +43,7 @@ async function main(): Promise<void> {
     emailSent,
     durationMs: Date.now() - startTime,
     errors,
+    topMatches: matches,
   };
 
   mkdirSync('data', { recursive: true });
@@ -67,6 +60,7 @@ function writeErrorStatus(error: string, startTime: number): void {
     emailSent: false,
     durationMs: Date.now() - startTime,
     errors: [error],
+    topMatches: [],
   };
   mkdirSync('data', { recursive: true });
   writeFileSync('data/last_run_status.json', JSON.stringify(status, null, 2));
