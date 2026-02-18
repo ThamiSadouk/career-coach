@@ -1,3 +1,25 @@
+import { z } from 'zod';
+
+export const UserProfileSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1),
+  email: z.string().email(),
+  skills: z.array(z.string()).min(1),
+  location: z.string().nullable(),
+  salaryMinimum: z.number().nullable(),
+  salaryPeriod: z.string(),
+  jobTypePreference: z.string(),
+  remotePreference: z.string(),
+  includeUnknowns: z.boolean(),
+  active: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
+export type CreateUserInput = Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt' | 'active'>;
+
 export type JobSource = 'remoteok' | 'web3career';
 
 export interface Job {
