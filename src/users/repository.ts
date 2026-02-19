@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { log } from '../logger.js';
-import { UserProfileSchema, type UserProfile, type CreateUserInput } from '../types.js';
+import { UserProfileSchema, type UserProfile, type CreateUserInput, type UpdateUserInput } from '../types.js';
 
 function mapRowToProfile(row: Record<string, unknown>): unknown {
   return {
@@ -82,5 +82,83 @@ export async function getActiveUsers(pool: pg.Pool): Promise<UserProfile[]> {
     const message = err instanceof Error ? err.message : String(err);
     log.error(`Failed to load active users: ${message}`);
     return [];
+  }
+}
+
+const FIELD_MAP: Record<keyof Required<UpdateUserInput>, string> = {
+  name: 'name',
+  email: 'email',
+  skills: 'skills',
+  location: 'location',
+  salaryMinimum: 'salary_minimum',
+  salaryPeriod: 'salary_period',
+  jobTypePreference: 'job_type_preference',
+  remotePreference: 'remote_preference',
+  includeUnknowns: 'include_unknowns',
+};
+
+export async function updateUser(
+  pool: pg.Pool,
+  id: number,
+  updates: UpdateUserInput,
+): Promise<UserProfile | null> {
+  try {
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    let paramIndex = 1;
+
+    for (const [camelKey, snakeCol] of Object.entries(FIELD_MAP)) {
+      if (camelKey in updates && updates[camelKey as keyof UpdateUserInput] !== undefined) {
+        setClauses.push(`${snakeCol} = $${paramIndex}`);
+        values.push(updates[camelKey as keyof UpdateUserInput]);
+        paramIndex++;
+      }
+    }
+
+    setClauses.push('updated_at = NOW()');
+    values.push(id);
+
+    const sql = `UPDATE users SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+    const { rows } = await pool.query(sql, values);
+
+    if (rows.length === 0) {
+      log.warn(`User not found for update: id=${id}`);
+      return null;
+    }
+
+    const mapped = mapRowToProfile(rows[0] as Record<string, unknown>);
+    const profile = UserProfileSchema.parse(mapped);
+    log.info(`User updated: ${profile.name}`);
+    return profile;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error(`Failed to update user id=${id}: ${message}`);
+    return null;
+  }
+}
+
+export async function deactivateUser(
+  pool: pg.Pool,
+  id: number,
+): Promise<UserProfile | null> {
+  try {
+    const { rows } = await pool.query(
+      'UPDATE users SET active = false, updated_at = NOW() WHERE id = $1 RETURNING *',
+      [id],
+    );
+
+    if (rows.length === 0) {
+      log.warn(`User not found for deactivation: id=${id}`);
+      return null;
+    }
+
+    const mapped = mapRowToProfile(rows[0] as Record<string, unknown>);
+    const profile = UserProfileSchema.parse(mapped);
+    log.info(`User deactivated: ${profile.name}`);
+    return profile;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error(`Failed to deactivate user id=${id}: ${message}`);
+    return null;
   }
 }

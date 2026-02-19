@@ -20,6 +20,8 @@ export type UserProfile = z.infer<typeof UserProfileSchema>;
 
 export type CreateUserInput = Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt' | 'active'>;
 
+export type UpdateUserInput = Partial<Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt' | 'active'>>;
+
 export type JobSource = 'remoteok' | 'web3career';
 
 export interface Job {
