@@ -76,7 +76,7 @@ function generateExplanation(job: Job, matchedSkills: string[], config: Config):
   }
 
   // Line 3: Remote
-  if (job.remote) {
+  if (job.remoteStatus === 'remote') {
     lines.push(`Remote: Yes (${job.location})`);
   } else {
     lines.push(`Remote: Not specified (${job.location})`);

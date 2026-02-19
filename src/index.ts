@@ -12,7 +12,6 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const isValidate = args.includes('--validate');
   const isDryRun = args.includes('--dry-run');
-  const errors: string[] = [];
 
   // 1. Load and validate config
   const config = loadConfig('./config.yaml');
@@ -37,13 +36,16 @@ async function main(): Promise<void> {
   // 5. Write run status
   const status: RunStatus = {
     timestamp: new Date().toISOString(),
-    success: true,
-    jobsFetched: jobs.length,
-    jobsMatched: matches.length,
-    emailSent,
     durationMs: Date.now() - startTime,
-    errors,
-    topMatches: matches,
+    jobsFetched: jobs.length,
+    sourceResults: {},
+    userResults: [{
+      user: config.user.name,
+      success: true,
+      matchCount: matches.length,
+      emailSent,
+    }],
+    pipelineSuccess: true,
   };
 
   mkdirSync('data', { recursive: true });
@@ -54,13 +56,17 @@ async function main(): Promise<void> {
 function writeErrorStatus(error: string, startTime: number): void {
   const status: RunStatus = {
     timestamp: new Date().toISOString(),
-    success: false,
-    jobsFetched: 0,
-    jobsMatched: 0,
-    emailSent: false,
     durationMs: Date.now() - startTime,
-    errors: [error],
-    topMatches: [],
+    jobsFetched: 0,
+    sourceResults: {},
+    userResults: [{
+      user: 'unknown',
+      success: false,
+      matchCount: 0,
+      emailSent: false,
+      error,
+    }],
+    pipelineSuccess: false,
   };
   mkdirSync('data', { recursive: true });
   writeFileSync('data/last_run_status.json', JSON.stringify(status, null, 2));
